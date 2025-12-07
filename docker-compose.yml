@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: production_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: pass1234
+      MONGO_INITDB_DATABASE: production
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - production_network
+
+  backend:
+    build: ./backend
+    container_name: production_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URL: mongodb://admin:pass1234@mongodb:27017/production?authSource=admin
+      CORS_ORIGINS: http://localhost:3000
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    networks:
+      - production_network
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    container_name: production_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - production_network
+    stdin_open: true
+    tty: true
+
+volumes:
+  mongo_data:
+
+networks:
+  production_network:
+    driver: bridge
