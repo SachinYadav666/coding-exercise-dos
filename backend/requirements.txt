@@ -12,4 +12,3 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 cors==1.0.1
 openai>=1.0.0
-pyarrow>=14.0.0
